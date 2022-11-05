@@ -33,7 +33,6 @@ jobs:
         script: |
           cd ${{ secrets.TARGET }} && composer install --optimize-autoloader
           composer dumpautoload -o
-          printf "%s" "${{secrets.ENV}}" > "${{secrets.TARGET}}/.env"
           chown -R $USER:www-data .
           find . -type f -exec chmod 664 {} \
           find . -type d -exec chmod 775 {} \
