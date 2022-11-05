@@ -18,7 +18,7 @@ jobs:
       with:
         source: "."
         target: ${{ secrets.TARGET }}
-        host: ${{ secrets.STAGING_HOST }}
+        host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         port: ${{ secrets.PORT }}
         key: ${{ secrets.KEY}}
@@ -26,14 +26,14 @@ jobs:
     - name: Executing remote command via ssh action
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.STAGING_HOST }}
+        host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         port: ${{ secrets.PORT }}
         key: ${{ secrets.KEY }}
         script: |
           cd ${{ secrets.TARGET }} && composer install --optimize-autoloader
           composer dumpautoload -o
-          printf "%s" "${{secrets.STAGING_ENV}}" > "${{secrets.TARGET}}/.env"
+          printf "%s" "${{secrets.ENV}}" > "${{secrets.TARGET}}/.env"
           chown -R $USER:www-data .
           find . -type f -exec chmod 664 {} \
           find . -type d -exec chmod 775 {} \
