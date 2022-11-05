@@ -1,0 +1,46 @@
+name: Deploy App
+
+on: 
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Copy repository contents via scp action
+      uses: appleboy/scp-action@master
+      with:
+        source: "."
+        target: ${{ secrets.TARGET }}
+        host: ${{ secrets.STAGING_HOST }}
+        username: ${{ secrets.USERNAME }}
+        port: ${{ secrets.PORT }}
+        key: ${{ secrets.KEY}}
+
+    - name: Executing remote command via ssh action
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.STAGING_HOST }}
+        username: ${{ secrets.USERNAME }}
+        port: ${{ secrets.PORT }}
+        key: ${{ secrets.KEY }}
+        script: |
+          cd ${{ secrets.TARGET }} && composer install --optimize-autoloader
+          composer dumpautoload -o
+          printf "%s" "${{secrets.STAGING_ENV}}" > "${{secrets.TARGET}}/.env"
+          chown -R $USER:www-data .
+          find . -type f -exec chmod 664 {} \
+          find . -type d -exec chmod 775 {} \
+          chgrp -R www-data storage bootstrap/cache
+          chmod -R ug+rwx storage bootstrap/cache
+          echo "yes" | php artisan migrate
+          php artisan view:cache
+          php artisan event:cache
+          php artisan route:cache
+          php artisan config:cache
